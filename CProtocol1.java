@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.net.Socket;
 import java.security.*;
 import java.security.cert.*;
+import java.util.Arrays;
 
 import javax.crypto.Cipher;
 
@@ -83,7 +84,7 @@ public abstract class CProtocol1 {
 			cipher.init(Cipher.DECRYPT_MODE, serverKey);
 			byte[] decryptNonce = cipher.doFinal(encryptedNonce);
 
-			if (nonce.equals(decryptNonce)) {
+			if (Arrays.equals(nonce, decryptNonce)) {
 				// server is correct
 				System.out.println("Server is verified");
 			} else {
