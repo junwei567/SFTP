@@ -10,7 +10,7 @@ import java.util.Arrays;
 
 import javax.crypto.Cipher;
 
-public abstract class ClientCP1 {
+public abstract class CProtocol1 {
 
 	private static byte[] nonce = new byte[32];
     private static byte[] encryptedNonce = new byte[128];
