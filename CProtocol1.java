@@ -1,14 +1,12 @@
-import java.io.BufferedInputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.FileInputStream;
-import java.io.InputStream;
+import java.io.*;
 import java.net.Socket;
 import java.security.*;
 import java.security.cert.*;
 import java.util.Arrays;
 
 import javax.crypto.Cipher;
+
+// import jdk.internal.org.jline.utils.InputStreamReader;
 
 import java.util.Scanner; 
 
@@ -20,7 +18,7 @@ public abstract class CProtocol1 {
 	public static void main(String[] args) {
 
 		Scanner scanner = new Scanner(System.in);
-		System.out.println("Enter start to start sending, or 'exit' to exit");
+		
 		// filename = scanner.nextLine();
 
     	// String filename = "100.txt";
@@ -57,15 +55,21 @@ public abstract class CProtocol1 {
 		long timeStarted = System.nanoTime();
 
 		try {
+			System.out.println("Establishing connection to server...");
+			
+			// Connect to server and get the input and output streams
+			clientSocket = new Socket(serverAddress, port);
+			toServer = new DataOutputStream(clientSocket.getOutputStream());
+			fromServer = new DataInputStream(clientSocket.getInputStream());
+
+			PrintWriter writeToServer = new PrintWriter(clientSocket.getOutputStream(), true);
+			// BufferedReader read = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+			System.out.println("Enter start to start sending, or 'exit' to exit");
+			
 			while (scanner.nextLine() != "exit") {
+				writeToServer.println("file");
 				System.out.println("Enter file to send, or 'exit' to exit");
 				filename = scanner.nextLine();
-				System.out.println("Establishing connection to server...");
-
-				// Connect to server and get the input and output streams
-				clientSocket = new Socket(serverAddress, port);
-				toServer = new DataOutputStream(clientSocket.getOutputStream());
-				fromServer = new DataInputStream(clientSocket.getInputStream());
 	
 				// * Start of Authentication Protocol
 				// InputStream fis = new FileInputStream("certificate_1004379.crt");
@@ -123,7 +127,7 @@ public abstract class CProtocol1 {
 				toServer.writeInt(0);
 				toServer.writeInt(filename.getBytes().length);
 				toServer.write(filename.getBytes());
-				//toServer.flush();
+				toServer.flush();
 	
 				// Open the file
 				fileInputStream = new FileInputStream(filename);
@@ -141,8 +145,11 @@ public abstract class CProtocol1 {
 					toServer.write(fromFileBuffer);
 					toServer.flush();
 				}
+				// bufferedFileInputStream.close();
+				System.out.println("file sent");
+				System.out.println("Enter start to start sending, or 'exit' to exit");
 			}
-	
+			writeToServer.println("exit");
 			scanner.close();
 
 	        bufferedFileInputStream.close();

@@ -1,10 +1,4 @@
-import java.io.BufferedOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.security.*;
@@ -41,7 +35,23 @@ public class SProtocol1 {
 			fromClient = new DataInputStream(connectionSocket.getInputStream());
 			toClient = new DataOutputStream(connectionSocket.getOutputStream());
 
+			// PrintWriter write = new PrintWriter(connectionSocket.getOutputStream(), true);
+			BufferedReader readFromClient = new BufferedReader(new InputStreamReader(connectionSocket.getInputStream()));
+
 			while (!connectionSocket.isClosed()) {
+				while (true) {
+					String decision = readFromClient.readLine();
+					if (decision.equals("file")) {
+						System.out.println("proceeding...");
+						break;
+					} else if (decision.equals("exit")){
+						System.out.println("Exiting all connections...");
+						fromClient.close(); 
+						toClient.close();
+						connectionSocket.close();
+						break;
+					}
+				}
 
 				// * start of Authentication Protocol
 
@@ -66,7 +76,7 @@ public class SProtocol1 {
 				System.out.println("Sent encrypted nonce to clint");
 				toClient.write(encryptedNonce);
 				// ! is it necessary?
-				toClient.flush();
+				// toClient.flush();
 
 				// * send cert to client
 				System.out.println("Sent encoded cert to client");
@@ -106,11 +116,13 @@ public class SProtocol1 {
 
 						if (bufferedFileOutputStream != null) bufferedFileOutputStream.close();
 						if (bufferedFileOutputStream != null) fileOutputStream.close();
-						fromClient.close();
+						fromClient.close(); 
 						toClient.close();
 						connectionSocket.close();
 					}
 				}
+
+		
 
 			}
 		} catch (Exception e) {e.printStackTrace();}
