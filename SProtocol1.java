@@ -17,7 +17,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-public class ServerWithoutSecurity {
+public class SProtocol1 {
 
 	private static byte[] nonce = new byte[32];
     // private static byte[] encryptedNonce = new byte[128];

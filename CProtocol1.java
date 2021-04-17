@@ -9,7 +9,7 @@ import java.security.cert.*;
 
 import javax.crypto.Cipher;
 
-public abstract class ClientWithoutSecurity {
+public abstract class CProtocol1 {
 
 	private static byte[] nonce = new byte[32];
     private static byte[] encryptedNonce = new byte[128];
