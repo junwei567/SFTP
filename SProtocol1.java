@@ -13,7 +13,6 @@ import java.nio.file.Paths;
 public class SProtocol1 {
 
 	private static byte[] nonce = new byte[32];
-    // private static byte[] encryptedNonce = new byte[128];
 
 	public static void main(String[] args) {
 
@@ -40,7 +39,7 @@ public class SProtocol1 {
 			while (!connectionSocket.isClosed()) {
 				int packetType = fromClient.readInt();
 
-				if (packetType == 42) {
+				if (packetType == 2) {
 					System.out.println("Starting Authentication Protocol with client");
 					// * start of Authentication Protocol
 					// InputStream fis = new FileInputStream("cacsertificate.crt");
@@ -50,7 +49,6 @@ public class SProtocol1 {
 					byte[] serverCertEncoded = serverCert.getEncoded();
 					// PublicKey key = serverCert.getPublicKey();
 
-			
 					// get nonce from client
 					System.out.println("Get nonce from client");
 					fromClient.read(nonce);
@@ -62,7 +60,6 @@ public class SProtocol1 {
 					// send nonce to client
 					System.out.println("Sent encrypted nonce to clint");
 					toClient.write(encryptedNonce);
-					// ! is it necessary?
 					toClient.flush();
 
 					// * send cert to client
@@ -71,9 +68,6 @@ public class SProtocol1 {
 					toClient.flush();
 
 					// * Authentication Protocol done after client verifies
-				}
-				if (packetType == 43) { // packettype 4?
-					System.out.println("close conn");
 				}
 
 				// If the packet is for transferring the filename
@@ -101,7 +95,6 @@ public class SProtocol1 {
 					decipher.init(Cipher.DECRYPT_MODE, privateKey);
 					byte[] decryptBlock = decipher.doFinal(block);
 
-
 					if (numBytes > 0)
 						bufferedFileOutputStream.write(decryptBlock, 0, numBytes);
 
@@ -110,7 +103,6 @@ public class SProtocol1 {
 
 						if (bufferedFileOutputStream != null) bufferedFileOutputStream.close();
 						if (bufferedFileOutputStream != null) fileOutputStream.close();
-				
 					}
 				}
 				if (packetType == 4) {
@@ -119,10 +111,8 @@ public class SProtocol1 {
 					toClient.close();
 					connectionSocket.close();
 				}
-
 			}
 		} catch (Exception e) {e.printStackTrace();}
-
 	}
 
 	public static PrivateKey PrivateKeyReader() throws Exception{

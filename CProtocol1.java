@@ -15,15 +15,10 @@ public abstract class CProtocol1 {
 
 	public static void main(String[] args) {
 
-    	String filename;// = "100.txt";
-    	// if (args.length > 0) filename = args[0];
-
+    	String filename;
     	String serverAddress = "localhost";
-    	// if (args.length > 1) filename = args[1];
 
     	int port = 4321;
-    	// if (args.length > 2) port = Integer.parseInt(args[2]);
-
 		int numBytes = 0;
 
 		Socket clientSocket = null;
@@ -52,7 +47,7 @@ public abstract class CProtocol1 {
 			X509Certificate CAcert =(X509Certificate) cf.generateCertificate(fis);
 			PublicKey key = CAcert.getPublicKey();
 
-			toServer.writeInt(42); // start AP with server
+			toServer.writeInt(2); 
 
 			// * Generate nonce
 			System.out.println("Generate nonce");
@@ -89,7 +84,7 @@ public abstract class CProtocol1 {
 				System.out.println("Server is verified");
 			} else {
 				// its an ambush!
-				toServer.writeInt(43); // ! close conn same as packettype 4???
+				toServer.writeInt(4); 
 				System.out.println("Server verification failed");
 				System.out.println("Closing all connections...");
 				toServer.close();
@@ -102,8 +97,6 @@ public abstract class CProtocol1 {
 			for (int i = 0; i < args.length; i ++) {
 
 				filename = args[i];
-
-				// System.out.println("Sending file...");
 				System.out.println("Sending " + filename);
 
 				// Send the filename
@@ -154,10 +147,6 @@ public abstract class CProtocol1 {
 
 		long timeTaken = System.nanoTime() - timeStarted;
 		System.out.println("Program took: " + timeTaken/1000000.0 + "ms to run");
-	}
-
-	public static byte [] encrypt() {
-		return new byte [32];
 	}
 
 	public static PublicKey PublicKeyReader() throws Exception{

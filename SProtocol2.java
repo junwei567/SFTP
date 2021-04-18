@@ -15,7 +15,6 @@ import java.nio.file.Paths;
 public class SProtocol2 {
 
 	private static byte[] nonce = new byte[32];
-    // private static byte[] encryptedNonce = new byte[128];
 	private static byte[] encryptSessionKey;
 
 	public static void main(String[] args) {
@@ -44,7 +43,7 @@ public class SProtocol2 {
 			while (!connectionSocket.isClosed()) {
 				int packetType = fromClient.readInt();
 
-				if (packetType == 42) {
+				if (packetType == 2) {
 					System.out.println("Starting Authentication Protocol with client");
 					// * start of Authentication Protocol
 					// InputStream fis = new FileInputStream("cacsertificate.crt");
@@ -54,7 +53,6 @@ public class SProtocol2 {
 					byte[] serverCertEncoded = serverCert.getEncoded();
 					// PublicKey key = serverCert.getPublicKey();
 
-			
 					// get nonce from client
 					System.out.println("Get nonce from client");
 					fromClient.read(nonce);
@@ -66,7 +64,6 @@ public class SProtocol2 {
 					// send nonce to client
 					System.out.println("Sent encrypted nonce to clint");
 					toClient.write(encryptedNonce);
-					// ! is it necessary?
 					toClient.flush();
 
 					// * send cert to client
@@ -75,9 +72,6 @@ public class SProtocol2 {
 					toClient.flush();
 
 					// * Authentication Protocol done after client verifies
-				}
-				if (packetType == 43) { // packettype 4?
-					System.out.println("close conn");
 				}
 
 				// If the packet is for transferring the filename
@@ -122,11 +116,12 @@ public class SProtocol2 {
 					toClient.close();
 					connectionSocket.close();
 				}
-				if (packetType == 53) {
+				if (packetType == 3) {
 					System.out.println("Receiving session key from client");
 					int encryptSessionKeySize = fromClient.readInt();
 					encryptSessionKey = new byte[encryptSessionKeySize];
-					fromClient.readFully(encryptSessionKey);
+					//
+					fromClient.readFully(encryptSessionKey, 0, encryptSessionKeySize);
 
 					System.out.println("Session Key received");
 					Cipher decipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
@@ -135,10 +130,8 @@ public class SProtocol2 {
 					sessionkey = new SecretKeySpec(decryptSessionKeyByte, 0, decryptSessionKeyByte.length, "AES");
 					sessionKeyCipher.init(Cipher.DECRYPT_MODE, sessionkey);
 				}
-
 			}
 		} catch (Exception e) {e.printStackTrace();}
-
 	}
 
 	public static PrivateKey PrivateKeyReader() throws Exception{

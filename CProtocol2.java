@@ -17,15 +17,10 @@ public abstract class CProtocol2 {
 
 	public static void main(String[] args) {
 
-    	String filename;// = "100.txt";
-    	// if (args.length > 0) filename = args[0];
-
+    	String filename;
     	String serverAddress = "localhost";
-    	// if (args.length > 1) filename = args[1];
 
     	int port = 4321;
-    	// if (args.length > 2) port = Integer.parseInt(args[2]);
-
 		int numBytes = 0;
 
 		Socket clientSocket = null;
@@ -35,7 +30,6 @@ public abstract class CProtocol2 {
 
     	FileInputStream fileInputStream = null;
         BufferedInputStream bufferedFileInputStream = null;
-		BufferedOutputStream bufferedOutputStream = null;
 
 		long timeStarted = System.nanoTime();
 
@@ -55,7 +49,7 @@ public abstract class CProtocol2 {
 			X509Certificate CAcert =(X509Certificate) cf.generateCertificate(fis);
 			PublicKey key = CAcert.getPublicKey();
 
-			toServer.writeInt(42); // start AP with server
+			toServer.writeInt(2); // start AP with server
 
 			// * Generate nonce
 			System.out.println("Generate nonce");
@@ -92,7 +86,7 @@ public abstract class CProtocol2 {
 				System.out.println("Server is verified");
 			} else {
 				// its an ambush!
-				toServer.writeInt(43); // ! close conn same as packettype 4???
+				toServer.writeInt(4); 
 				System.out.println("Server verification failed");
 				System.out.println("Closing all connections...");
 				toServer.close();
@@ -112,24 +106,16 @@ public abstract class CProtocol2 {
 			byte[] encryptSessionKey = rsaCipher.doFinal(encodedSessionKey);
 
 			System.out.println("Send session key to server");
-			// ! can I change this to normal file sending?
-			bufferedOutputStream = new BufferedOutputStream(toServer);
-
-			toServer.writeInt(53);
+			toServer.writeInt(3);
 			toServer.writeInt(encryptSessionKey.length);
-
-			bufferedOutputStream.write(encryptSessionKey, 0, encryptSessionKey.length);
-			bufferedOutputStream.flush();
+			toServer.write(encryptSessionKey);
+			toServer.flush();
 			System.out.println("Session key sent...");
-
-			// Key AESKey = new SecretKeySpec("secret".getBytes(), "AES"); 
 
 			// * for loop for multiple file transfer
 			for (int i = 0; i < args.length; i ++) {
 
 				filename = args[i];
-
-				// System.out.println("Sending file...");
 				System.out.println("Sending " + filename);
 
 				// Send the filename
@@ -162,11 +148,10 @@ public abstract class CProtocol2 {
 					toServer.flush();
 			
 				}
-
 				System.out.println("Finished sending " + filename);
 
+				// * End of File
 				if (i == args.length -1) {
-					// * End of File
 					toServer.writeInt(4);
 					bufferedFileInputStream.close();
 					fileInputStream.close();
@@ -178,10 +163,6 @@ public abstract class CProtocol2 {
 
 		long timeTaken = System.nanoTime() - timeStarted;
 		System.out.println("Program took: " + timeTaken/1000000.0 + "ms to run");
-	}
-
-	public static byte [] encrypt() {
-		return new byte [32];
 	}
 
 	public static PublicKey PublicKeyReader() throws Exception{
