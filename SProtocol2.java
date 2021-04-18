@@ -6,6 +6,8 @@ import java.security.cert.*;
 import java.security.spec.PKCS8EncodedKeySpec;
 
 import javax.crypto.Cipher;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -14,6 +16,7 @@ public class SProtocol2 {
 
 	private static byte[] nonce = new byte[32];
     // private static byte[] encryptedNonce = new byte[128];
+	private static byte[] encryptSessionKey;
 
 	public static void main(String[] args) {
 
@@ -33,9 +36,10 @@ public class SProtocol2 {
 			connectionSocket = welcomeSocket.accept();
 			fromClient = new DataInputStream(connectionSocket.getInputStream());
 			toClient = new DataOutputStream(connectionSocket.getOutputStream());
-
 			//private key
 			PrivateKey privateKey = PrivateKeyReader();
+			SecretKey sessionkey;
+			Cipher sessionKeyCipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
 
 			while (!connectionSocket.isClosed()) {
 				int packetType = fromClient.readInt();
@@ -97,10 +101,9 @@ public class SProtocol2 {
 					int encryptNumBytes = fromClient.readInt();
 					byte [] block = new byte[encryptNumBytes];
 					fromClient.readFully(block, 0, encryptNumBytes);
-					Cipher decipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
-					decipher.init(Cipher.DECRYPT_MODE, privateKey);
-					byte[] decryptBlock = decipher.doFinal(block);
-
+					// * decrypted using session key
+					byte[] decryptBlock = sessionKeyCipher.doFinal(block);
+				
 
 					if (numBytes > 0)
 						bufferedFileOutputStream.write(decryptBlock, 0, numBytes);
@@ -118,6 +121,19 @@ public class SProtocol2 {
 					fromClient.close();
 					toClient.close();
 					connectionSocket.close();
+				}
+				if (packetType == 53) {
+					System.out.println("Receiving session key from client");
+					int encryptSessionKeySize = fromClient.readInt();
+					encryptSessionKey = new byte[encryptSessionKeySize];
+					fromClient.readFully(encryptSessionKey);
+
+					System.out.println("Session Key received");
+					Cipher decipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+					decipher.init(Cipher.DECRYPT_MODE, privateKey);
+					byte[] decryptSessionKeyByte = decipher.doFinal(encryptSessionKey);
+					sessionkey = new SecretKeySpec(decryptSessionKeyByte, 0, decryptSessionKeyByte.length, "AES");
+					sessionKeyCipher.init(Cipher.DECRYPT_MODE, sessionkey);
 				}
 
 			}

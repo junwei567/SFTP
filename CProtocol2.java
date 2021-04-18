@@ -9,7 +9,6 @@ import java.nio.file.Paths;
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
-import javax.crypto.spec.SecretKeySpec;
 
 public abstract class CProtocol2 {
 
@@ -113,15 +112,15 @@ public abstract class CProtocol2 {
 			byte[] encryptSessionKey = rsaCipher.doFinal(encodedSessionKey);
 
 			System.out.println("Send session key to server");
+			// ! can I change this to normal file sending?
 			bufferedOutputStream = new BufferedOutputStream(toServer);
 
-			toServer.write(53);
+			toServer.writeInt(53);
 			toServer.writeInt(encryptSessionKey.length);
 
 			bufferedOutputStream.write(encryptSessionKey, 0, encryptSessionKey.length);
 			bufferedOutputStream.flush();
 			System.out.println("Session key sent...");
-			// ! paused here. Left server implementation and file d/encryption 
 
 			// Key AESKey = new SecretKeySpec("secret".getBytes(), "AES"); 
 
