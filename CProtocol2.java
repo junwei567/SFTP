@@ -155,12 +155,7 @@ public abstract class CProtocol2 {
 					toServer.writeInt(numBytes);
 
 					// * CP2: use session key
-				
-
-					// * CP1: encrypts file data before sending RSA
-					Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
-					cipher.init(Cipher.ENCRYPT_MODE, publickey);
-					byte[] encryptFromFileBuffer = cipher.doFinal(fromFileBuffer);
+					byte[] encryptFromFileBuffer = sessionCipher.doFinal(fromFileBuffer);
 					int encryptNumBytes = encryptFromFileBuffer.length;
 					toServer.writeInt(encryptNumBytes);
 

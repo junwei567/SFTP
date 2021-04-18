@@ -128,6 +128,8 @@ public abstract class CProtocol1 {
 					toServer.writeInt(numBytes);
 
 					// * CP1: encrypts file data before sending RSA
+					// encrypted using server's public key
+					// so that it can be decrypted on the server side using his own private key
 					Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
 					cipher.init(Cipher.ENCRYPT_MODE, publickey);
 					byte[] encryptFromFileBuffer = cipher.doFinal(fromFileBuffer);
