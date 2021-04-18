@@ -7,8 +7,11 @@ import java.util.Arrays;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import javax.crypto.Cipher;
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 
-public abstract class CProtocol1 {
+public abstract class CProtocol2 {
 
 	private static byte[] nonce = new byte[32];
     private static byte[] encryptedNonce = new byte[128];
@@ -33,6 +36,7 @@ public abstract class CProtocol1 {
 
     	FileInputStream fileInputStream = null;
         BufferedInputStream bufferedFileInputStream = null;
+		BufferedOutputStream bufferedOutputStream = null;
 
 		long timeStarted = System.nanoTime();
 
@@ -98,6 +102,29 @@ public abstract class CProtocol1 {
 			}
 			// * Authentication Protocol done
 
+			// * CP2 generate session key
+			SecretKey sessionKey = KeyGenerator.getInstance("AES").generateKey();
+			Cipher sessionCipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
+			sessionCipher.init(Cipher.ENCRYPT_MODE, sessionKey);
+			byte[] encodedSessionKey = sessionKey.getEncoded();
+
+			Cipher rsaCipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+			rsaCipher.init(Cipher.ENCRYPT_MODE, publickey);
+			byte[] encryptSessionKey = rsaCipher.doFinal(encodedSessionKey);
+
+			System.out.println("Send session key to server");
+			bufferedOutputStream = new BufferedOutputStream(toServer);
+
+			toServer.write(53);
+			toServer.writeInt(encryptSessionKey.length);
+
+			bufferedOutputStream.write(encryptSessionKey, 0, encryptSessionKey.length);
+			bufferedOutputStream.flush();
+			System.out.println("Session key sent...");
+			// ! paused here. Left server implementation and file d/encryption 
+
+			// Key AESKey = new SecretKeySpec("secret".getBytes(), "AES"); 
+
 			// * for loop for multiple file transfer
 			for (int i = 0; i < args.length; i ++) {
 
@@ -127,6 +154,9 @@ public abstract class CProtocol1 {
 					toServer.writeInt(1);
 					toServer.writeInt(numBytes);
 
+					// * CP2: use session key
+				
+
 					// * CP1: encrypts file data before sending RSA
 					Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
 					cipher.init(Cipher.ENCRYPT_MODE, publickey);
@@ -136,7 +166,9 @@ public abstract class CProtocol1 {
 
 					toServer.write(encryptFromFileBuffer);
 					toServer.flush();
+			
 				}
+
 				System.out.println("Finished sending " + filename);
 
 				if (i == args.length -1) {
