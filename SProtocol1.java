@@ -1,10 +1,4 @@
-import java.io.BufferedOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.security.*;
@@ -14,7 +8,6 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import javax.crypto.Cipher;
 
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class SProtocol1 {
@@ -41,41 +34,47 @@ public class SProtocol1 {
 			fromClient = new DataInputStream(connectionSocket.getInputStream());
 			toClient = new DataOutputStream(connectionSocket.getOutputStream());
 
+			//private key
+			PrivateKey privateKey = PrivateKeyReader();
+
 			while (!connectionSocket.isClosed()) {
-
-				// * start of Authentication Protocol
-
-				// InputStream fis = new FileInputStream("cacsertificate.crt");
-				InputStream fis = new FileInputStream("certificate_1004379.crt");
-				CertificateFactory cf = CertificateFactory.getInstance("X.509");
-				X509Certificate serverCert =(X509Certificate) cf.generateCertificate(fis);
-				byte[] serverCertEncoded = serverCert.getEncoded();
-				// PublicKey key = serverCert.getPublicKey();
-
-				//private key
-				PrivateKey privateKey = PrivateKeyReader();
-				// get nonce from client
-				System.out.println("Get nonce from client");
-				fromClient.read(nonce);
-				// encrypt nonce for client
-				System.out.println("Encrypt nonce for client");
-				Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
-				cipher.init(Cipher.ENCRYPT_MODE, privateKey);
-				byte[] encryptedNonce = cipher.doFinal(nonce);
-				// send nonce to client
-				System.out.println("Sent encrypted nonce to clint");
-				toClient.write(encryptedNonce);
-				// ! is it necessary?
-				toClient.flush();
-
-				// * send cert to client
-				System.out.println("Sent encoded cert to client");
-				toClient.write(serverCertEncoded);
-				toClient.flush();
-
-				// * Authentication Protocol done after client verifies
-
 				int packetType = fromClient.readInt();
+
+				if (packetType == 42) {
+					System.out.println("Starting Authentication Protocol with client");
+					// * start of Authentication Protocol
+					// InputStream fis = new FileInputStream("cacsertificate.crt");
+					InputStream fis = new FileInputStream("certificate_1004379.crt");
+					CertificateFactory cf = CertificateFactory.getInstance("X.509");
+					X509Certificate serverCert =(X509Certificate) cf.generateCertificate(fis);
+					byte[] serverCertEncoded = serverCert.getEncoded();
+					// PublicKey key = serverCert.getPublicKey();
+
+			
+					// get nonce from client
+					System.out.println("Get nonce from client");
+					fromClient.read(nonce);
+					// encrypt nonce for client
+					System.out.println("Encrypt nonce for client");
+					Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+					cipher.init(Cipher.ENCRYPT_MODE, privateKey);
+					byte[] encryptedNonce = cipher.doFinal(nonce);
+					// send nonce to client
+					System.out.println("Sent encrypted nonce to clint");
+					toClient.write(encryptedNonce);
+					// ! is it necessary?
+					toClient.flush();
+
+					// * send cert to client
+					System.out.println("Sent encoded cert to client");
+					toClient.write(serverCertEncoded);
+					toClient.flush();
+
+					// * Authentication Protocol done after client verifies
+				}
+				if (packetType == 43) { // packettype 4?
+					System.out.println("close conn");
+				}
 
 				// If the packet is for transferring the filename
 				if (packetType == 0) {
@@ -95,21 +94,30 @@ public class SProtocol1 {
 				} else if (packetType == 1) {
 
 					int numBytes = fromClient.readInt();
-					byte [] block = new byte[numBytes];
-					fromClient.readFully(block, 0, numBytes);
+					int encryptNumBytes = fromClient.readInt();
+					byte [] block = new byte[encryptNumBytes];
+					fromClient.readFully(block, 0, encryptNumBytes);
+					Cipher decipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+					decipher.init(Cipher.DECRYPT_MODE, privateKey);
+					byte[] decryptBlock = decipher.doFinal(block);
+
 
 					if (numBytes > 0)
-						bufferedFileOutputStream.write(block, 0, numBytes);
+						bufferedFileOutputStream.write(decryptBlock, 0, numBytes);
 
 					if (numBytes < 117) {
-						System.out.println("Closing connection...");
+						System.out.println("File Received");
 
 						if (bufferedFileOutputStream != null) bufferedFileOutputStream.close();
 						if (bufferedFileOutputStream != null) fileOutputStream.close();
-						fromClient.close();
-						toClient.close();
-						connectionSocket.close();
+				
 					}
+				}
+				if (packetType == 4) {
+					System.out.println("close conn");
+					fromClient.close();
+					toClient.close();
+					connectionSocket.close();
 				}
 
 			}
