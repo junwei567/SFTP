@@ -66,6 +66,7 @@ public class SProtocol1 {
 
 					// * send cert to client
 					System.out.println("Sent encoded cert to client");
+					// toClient.writeInt(serverCertEncoded.length);
 					toClient.write(serverCertEncoded);
 					toClient.flush();
 
