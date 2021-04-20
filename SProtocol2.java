@@ -95,7 +95,7 @@ public class SProtocol2 {
 					int encryptNumBytes = fromClient.readInt();
 					byte [] block = new byte[encryptNumBytes];
 					fromClient.readFully(block, 0, encryptNumBytes);
-					// * decrypted using session key
+					//? 2. decrypte file chunks using session key
 					byte[] decryptBlock = sessionKeyCipher.doFinal(block);
 				
 
@@ -126,6 +126,7 @@ public class SProtocol2 {
 					System.out.println("Session Key received");
 					Cipher decipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
 					decipher.init(Cipher.DECRYPT_MODE, privateKey);
+					//? 1. decrypt symmetric (session) key with private key
 					byte[] decryptSessionKeyByte = decipher.doFinal(encryptSessionKey);
 					sessionkey = new SecretKeySpec(decryptSessionKeyByte, 0, decryptSessionKeyByte.length, "AES");
 					sessionKeyCipher.init(Cipher.DECRYPT_MODE, sessionkey);

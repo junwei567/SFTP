@@ -95,7 +95,7 @@ public abstract class CProtocol2 {
 			}
 			// * Authentication Protocol done
 
-			// * CP2 generate session key
+			//? 1. generate session key
 			SecretKey sessionKey = KeyGenerator.getInstance("AES").generateKey();
 			Cipher sessionCipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
 			sessionCipher.init(Cipher.ENCRYPT_MODE, sessionKey);
@@ -103,6 +103,7 @@ public abstract class CProtocol2 {
 
 			Cipher rsaCipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
 			rsaCipher.init(Cipher.ENCRYPT_MODE, publickey);
+			//? 2. send symmetric key to server
 			byte[] encryptSessionKey = rsaCipher.doFinal(encodedSessionKey);
 
 			System.out.println("Send session key to server");
@@ -139,7 +140,7 @@ public abstract class CProtocol2 {
 					toServer.writeInt(1);
 					toServer.writeInt(numBytes);
 
-					// * CP2: use session key
+					//? 3. encrypt file chunk with symmetric key
 					byte[] encryptFromFileBuffer = sessionCipher.doFinal(fromFileBuffer);
 					int encryptNumBytes = encryptFromFileBuffer.length;
 					toServer.writeInt(encryptNumBytes);

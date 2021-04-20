@@ -1,0 +1,5 @@
+.DS_Store
+secret_file.json
+large_file.json
+medium_file.json
+small_file.txt

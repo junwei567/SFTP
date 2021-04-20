@@ -10,6 +10,8 @@ import javax.crypto.Cipher;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
+//? 1. sending of server cert to client
+
 public class SProtocol1 {
 
 	private static byte[] nonce = new byte[32];
@@ -93,6 +95,7 @@ public class SProtocol1 {
 					fromClient.readFully(block, 0, encryptNumBytes);
 					Cipher decipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
 					decipher.init(Cipher.DECRYPT_MODE, privateKey);
+					//? 2. decrypt file chunks with private key
 					byte[] decryptBlock = decipher.doFinal(block);
 
 					if (numBytes > 0)

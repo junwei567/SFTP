@@ -8,6 +8,10 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import javax.crypto.Cipher;
 
+//? 1. get server.crt from server
+//? 2. verify and decrypt server.crt using CA cert
+//? 3. extract server's public key from the certificate
+
 public abstract class CProtocol1 {
 
 	private static byte[] nonce = new byte[32];
@@ -125,6 +129,7 @@ public abstract class CProtocol1 {
 					// so that it can be decrypted on the server side using his own private key
 					Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
 					cipher.init(Cipher.ENCRYPT_MODE, publickey);
+					//? 4. encrypt file chunks with server's public key
 					byte[] encryptFromFileBuffer = cipher.doFinal(fromFileBuffer);
 					int encryptNumBytes = encryptFromFileBuffer.length;
 					toServer.writeInt(encryptNumBytes);
