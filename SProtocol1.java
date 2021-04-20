@@ -64,6 +64,7 @@ public class SProtocol1 {
 					toClient.write(encryptedNonce);
 					toClient.flush();
 
+					//? 1. sending of server cert to client
 					// * send cert to client
 					System.out.println("Sent encoded cert to client");
 					// toClient.writeInt(serverCertEncoded.length);
